@@ -1,0 +1,30 @@
+* {
+  box-sizing: border-box;
+  position: relative;
+}
+
+.ui-app {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #696969;
+}
+
+.ui-screen {
+  padding: 2rem;
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+}
+
+.ui-input {
+  display: block;
+  appearance: none;
+  height: 2rem;
+  background: transparent;
+  border: 1px solid gray;
+  margin-bottom: 1rem;
+  width: 20rem;
+  padding: 0 0.5rem;
+}
