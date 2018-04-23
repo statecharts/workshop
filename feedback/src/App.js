@@ -110,12 +110,7 @@ class App extends Component {
   }
 
   render() {
-    return (
-      <div className="ui-app">
-        {this.renderScreen()}
-        {this.state.appState.value}
-      </div>
-    );
+    return <div className="ui-app">{this.renderScreen()}</div>;
   }
 }
 
