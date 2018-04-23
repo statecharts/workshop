@@ -7,9 +7,9 @@ import * as graphUtils from 'xstate/lib/graph';
 const { machine } = App;
 const simplePaths = graphUtils.getSimplePathsAsArray(machine);
 
-for (const { state: finalState, paths: allPaths } of simplePaths) {
+for (const { state: finalState, paths: statePaths } of simplePaths) {
   describe(`'${finalState}' state`, () => {
-    allPaths.forEach((paths, i) => {
+    statePaths.forEach((paths, i) => {
       describe(`path ${i}`, () => {
         const { getByTestId } = render(<App />);
         const heuristics = {
