@@ -17,7 +17,13 @@ export const machine = Machine({
     form: {
       on: {
         SUBMIT: {
-          thanks: { actions: ['postForm'], cond: 'formValid' }
+          thanks: {
+            actions: ['postForm'],
+            cond: fullState => {
+              console.log(fullState);
+              return fullState.input.length > 0;
+            }
+          }
         },
         ESC: 'closed'
       },
@@ -69,17 +75,24 @@ class App extends Component {
   }
 
   send(eventType) {
-    const nextState = machine.transition(this.state.appState, eventType);
+    const nextState = machine.transition(
+      this.state.appState,
+      eventType,
+      this.state
+    );
     const { actions } = nextState;
+
+    console.log(actions);
 
     this.setState(
       {
-        appState: machine.transition(this.state.appState, eventType)
+        appState: nextState
       },
       () => {
         const nextExtState = actions.reduce((extState, action) => {
+          const command = this.actions[action];
           // Find the command to execute, and execute it with the state and event
-          return this.actions[action](extState, eventType);
+          return command(extState, eventType);
         }, this.state);
       }
     );
@@ -114,9 +127,10 @@ class App extends Component {
           <form
             className="ui-screen"
             data-testid="form-screen"
-            onSubmit={_ =>
-              this.send({ type: 'SUBMIT', value: this.state.input })
-            }
+            onSubmit={e => {
+              e.preventDefault();
+              this.send({ type: 'SUBMIT', value: this.state.input });
+            }}
           >
             <p>Why?</p>
             <input
