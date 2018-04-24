@@ -4,6 +4,7 @@ import logo from './logo.svg';
 import './App.css';
 
 export const machine = Machine({
+  key: 'feedback',
   initial: 'question',
   states: {
     question: {
@@ -15,15 +16,20 @@ export const machine = Machine({
     },
     form: {
       on: {
-        SUBMIT: 'thanks',
+        SUBMIT: {
+          thanks: { actions: ['postForm'], cond: 'formValid' }
+        },
         ESC: 'closed'
-      }
+      },
+      onEntry: ['focusInput'],
+      onExit: ['clearForm']
     },
     thanks: {
       on: {
         CLOSE: 'closed',
         ESC: 'closed'
-      }
+      },
+      onEntry: ['acknowledge']
     },
     closed: {}
   }
@@ -33,7 +39,17 @@ class App extends Component {
   static machine = machine;
 
   state = {
-    appState: machine.initialState
+    appState: machine.initialState,
+    input: ''
+  };
+
+  inputRef = React.createRef();
+
+  actions = {
+    focusInput: () => this.focusInput(),
+    postForm: (_, event) => console.log('POST:', event.value),
+    clearForm: () => this.clearInput(),
+    acknowledge: () => console.log('Submitted feedback!')
   };
 
   componentDidMount() {
@@ -44,10 +60,29 @@ class App extends Component {
     });
   }
 
+  focusInput() {
+    this.inputRef.current.focus();
+  }
+
+  clearInput() {
+    this.setState({ input: '' });
+  }
+
   send(eventType) {
-    this.setState({
-      appState: machine.transition(this.state.appState, eventType)
-    });
+    const nextState = machine.transition(this.state.appState, eventType);
+    const { actions } = nextState;
+
+    this.setState(
+      {
+        appState: machine.transition(this.state.appState, eventType)
+      },
+      () => {
+        const nextExtState = actions.reduce((extState, action) => {
+          // Find the command to execute, and execute it with the state and event
+          return this.actions[action](extState, eventType);
+        }, this.state);
+      }
+    );
   }
 
   renderScreen() {
@@ -76,17 +111,24 @@ class App extends Component {
       }
       case 'form': {
         return (
-          <div className="ui-screen" data-testid="form-screen">
+          <form
+            className="ui-screen"
+            data-testid="form-screen"
+            onSubmit={_ =>
+              this.send({ type: 'SUBMIT', value: this.state.input })
+            }
+          >
             <p>Why?</p>
-            <input type="text" className="ui-input" />
-            <button
-              className="ui-button"
-              onClick={_ => this.send('SUBMIT')}
-              data-testid="submit-button"
-            >
+            <input
+              type="text"
+              className="ui-input"
+              ref={this.inputRef}
+              onChange={e => this.setState({ input: e.target.value })}
+            />
+            <button className="ui-button" data-testid="submit-button">
               Submit
             </button>
-          </div>
+          </form>
         );
       }
       case 'thanks': {
